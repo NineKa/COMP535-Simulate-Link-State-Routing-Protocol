@@ -1,3 +1,6 @@
+language: java
+jdk:
+- oraclejdk8
 script:
 - mvn antlr4:antlr4
 - mvn compile assembly:single
