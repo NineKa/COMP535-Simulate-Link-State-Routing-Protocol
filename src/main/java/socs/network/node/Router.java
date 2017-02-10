@@ -1,9 +1,10 @@
 package socs.network.node;
 
 import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
-import socs.network.util.parser.RouterCommandBaseListener;
+import socs.network.util.parser.RouterCommandBaseVisitor;
 import socs.network.util.parser.RouterCommandLexer;
 import socs.network.util.parser.RouterCommandParser;
 
@@ -270,59 +271,91 @@ public class Router {
 
     }
 
+    private RouterCommandBaseVisitor<Void> routerCommandBaseVisitor() {
+        return new RouterCommandBaseVisitor<Void>() {
+            @Override
+            public Void visitCmdAttach(RouterCommandParser.CmdAttachContext cmdAttachContext) {
+                processAttach(
+                        cmdAttachContext.processIP.getText(),
+                        Short.parseShort(cmdAttachContext.processPort.getText()),
+                        cmdAttachContext.simulateIP.getText(),
+                        Short.parseShort(cmdAttachContext.weight.getText())
+                );
+                return null;
+            }
+
+            @Override
+            public Void visitCmdAttachFile(RouterCommandParser.CmdAttachFileContext cmdAttachFileContext) {
+                String filepath = cmdAttachFileContext.path.getText();
+                filepath = filepath.substring(1, filepath.length() - 1).trim();
+                if (new File(filepath).exists()) {
+                    Configuration configuration = new Configuration(filepath);
+                    processAttach(
+                            configuration.getString(KEY_PROCESS_IP),
+                            configuration.getShort(KEY_PROCESS_PORT),
+                            configuration.getString(KEY_SIMULATE_IP),
+                            Short.parseShort(cmdAttachFileContext.weight.getText())
+                    );
+                }
+                return null;
+            }
+
+            @Override
+            public Void visitCmdStart(RouterCommandParser.CmdStartContext cmdStartContext) {
+                processStart();
+                return null;
+            }
+
+            @Override
+            public Void visitCmdNeighbors(RouterCommandParser.CmdNeighborsContext cmdNeighborsContext) {
+                processNeighbors();
+                return null;
+            }
+
+            @Override
+            public Void visitCmdExit(RouterCommandParser.CmdExitContext cmdExitContext) {
+                System.exit(0);
+                return null;
+            }
+        };
+    }
+
+    private ANTLRErrorListener routerCommandErrorListener() {
+        return new BaseErrorListener() {
+            @Override
+            public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+                                    int line, int charPositionInLine, String msg,
+                                    RecognitionException e) throws ParseCancellationException {
+                System.out.println(String.format(
+                        "Syntax error at character %d, %s",
+                        charPositionInLine,
+                        msg
+                ));
+                throw new ParseCancellationException();
+            }
+        };
+    }
+
     public void terminal() {
         try {
             InputStreamReader isReader = new InputStreamReader(System.in);
             BufferedReader br = new BufferedReader(isReader);
             do {
-                String command = br.readLine();
-                final RouterCommandLexer lexer = new RouterCommandLexer(new ANTLRInputStream(command));
-                final RouterCommandParser parser = new RouterCommandParser(new CommonTokenStream(lexer));
-                lexer.removeErrorListeners();
-                parser.removeErrorListeners();
-                parser.addParseListener(new RouterCommandBaseListener() {
-                    @Override
-                    public void exitCmdAttach(RouterCommandParser.CmdAttachContext cmdAttachContext) {
-                        processAttach(
-                                cmdAttachContext.processIP.getText(),
-                                Short.parseShort(cmdAttachContext.processPort.getText()),
-                                cmdAttachContext.simulateIP.getText(),
-                                Short.parseShort(cmdAttachContext.weight.getText())
-                        );
-                    }
+                try {
+                    String command = br.readLine();
+                    final RouterCommandLexer lexer = new RouterCommandLexer(new ANTLRInputStream(command));
+                    final RouterCommandParser parser = new RouterCommandParser(new CommonTokenStream(lexer));
+                    lexer.removeErrorListeners();
+                    lexer.addErrorListener(routerCommandErrorListener());
+                    parser.removeErrorListeners();
+                    parser.addErrorListener(routerCommandErrorListener());
 
-                    @Override
-                    public void exitCmdAttachFile(RouterCommandParser.CmdAttachFileContext cmdAttachFileContext) {
-                        String filepath = cmdAttachFileContext.path.getText();
-                        filepath = filepath.substring(1, filepath.length() - 1).trim();
-                        if (!new File(filepath).exists()) {
-                            return;
-                        }
-                        Configuration configuration = new Configuration(filepath);
-                        processAttach(
-                                configuration.getString(KEY_PROCESS_IP),
-                                configuration.getShort(KEY_PROCESS_PORT),
-                                configuration.getString(KEY_SIMULATE_IP),
-                                Short.parseShort(cmdAttachFileContext.weight.getText())
-                        );
-                    }
-
-                    @Override
-                    public void exitCmdStart(RouterCommandParser.CmdStartContext cmdStartContext) {
-                        processStart();
-                    }
-
-                    @Override
-                    public void exitCmdNeighbors(RouterCommandParser.CmdNeighborsContext cmdNeighborsContext) {
-                        processNeighbors();
-                    }
-
-                    @Override
-                    public void exitCmdExit(RouterCommandParser.CmdExitContext ctx) {
-                        System.exit(0);
-                    }
-                });
-                parser.command();
+                    RouterCommandParser.CommandContext commandContext = parser.command();
+                    routerCommandBaseVisitor().visit(commandContext);
+                } catch (ParseCancellationException exception) {
+                    /* parsing error has occurred */
+                    /* ignored */
+                }
             } while (true);
 
         } catch (Exception e) {

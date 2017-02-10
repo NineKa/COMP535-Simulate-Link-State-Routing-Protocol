@@ -113,6 +113,11 @@ public class RouterCommandParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCommand(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCommand(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CommandContext command() throws RecognitionException {
@@ -196,6 +201,11 @@ public class RouterCommandParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdAttach(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdAttach(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CmdAttachContext cmdAttach() throws RecognitionException {
@@ -245,6 +255,11 @@ public class RouterCommandParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdAttachFile(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdAttachFile(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CmdAttachFileContext cmdAttachFile() throws RecognitionException {
@@ -286,6 +301,11 @@ public class RouterCommandParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdStart(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdStart(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CmdStartContext cmdStart() throws RecognitionException {
@@ -323,6 +343,11 @@ public class RouterCommandParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdNeighbors(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdNeighbors(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CmdNeighborsContext cmdNeighbors() throws RecognitionException {
@@ -359,6 +384,11 @@ public class RouterCommandParser extends Parser {
 		@Override
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdExit(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdExit(this);
+			else return visitor.visitChildren(this);
 		}
 	}
 
