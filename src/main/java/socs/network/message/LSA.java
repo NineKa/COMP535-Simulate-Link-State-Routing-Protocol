@@ -8,6 +8,7 @@ public class LSA implements Serializable {
     //IP address of the router originate this LSA
     public String linkStateID;
     public int lsaSeqNumber = Integer.MIN_VALUE;
+    public long timestamp;
 
     public LinkedList<LinkDescription> links = new LinkedList<LinkDescription>();
 
@@ -20,5 +21,9 @@ public class LSA implements Serializable {
         }
         sb.append("\n");
         return sb.toString();
+    }
+
+    public void add_link(String link_id, int port_num, int link_weight){
+        links.add(new LinkDescription(link_id, port_num, link_weight));
     }
 }

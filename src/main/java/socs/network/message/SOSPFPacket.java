@@ -3,6 +3,8 @@ package socs.network.message;
 import java.io.*;
 import java.util.Vector;
 import java.util.concurrent.atomic.AtomicInteger;
+import socs.network.node.*;
+import java.util.List;
 
 public class SOSPFPacket implements Serializable {
 
@@ -28,6 +30,22 @@ public class SOSPFPacket implements Serializable {
     public String neighborID; //neighbor's simulated IP address
 
     //used by LSAUPDATE
-    public Vector<LSA> lsaArray = null;
+    public LSA lsaArray = null;
 
+    public SOSPFPacket(LSA update_links, List<Link> ports, RouterDescription current, int seq_num){
+        if(update_links == null) {
+            lsaArray = new LSA();
+            lsaArray.lsaSeqNumber = seq_num;
+            lsaArray.linkStateID = current.simulatedIPAddress;
+            for (Link l : ports) {
+                lsaArray.add_link(l.router2.simulatedIPAddress, l.router2.processPortNumber, l.weight);
+            }
+        }else{
+            lsaArray = update_links;
+        }
+    }
+
+    public SOSPFPacket(){
+
+    }
 }

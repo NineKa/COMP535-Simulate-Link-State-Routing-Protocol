@@ -4,6 +4,7 @@ command :   cmdAttach
         |   cmdAttachFile
         |   cmdStart
         |   cmdNeighbors
+        |   cmd_detect
         |   cmdExit   // TODO : remove this in the future
         ;
 
@@ -11,6 +12,7 @@ cmdAttach : CMD_ATTACH processIP=IP_ADDRESS processPort=NUMBER simulateIP=IP_ADD
 cmdAttachFile : CMD_ATTACH path=QUOTED_STRING weight=NUMBER;
 cmdStart : CMD_START;
 cmdNeighbors : CMD_NEIGHBORS;
+cmd_detect : CMD_DETECT simulateIP=IP_ADDRESS;
 cmdExit : CMD_EXIT;  // TODO : remove this in the future
 
 IP_ADDRESS : [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]?;

@@ -2,10 +2,10 @@ package socs.network.node;
 
 public class Link {
 
-    RouterDescription router1;
-    RouterDescription router2;
+    public RouterDescription router1;
+    public RouterDescription router2;
 
-    short weight = 0;
+    public short weight = 0;
 
     public Link(RouterDescription r1, RouterDescription r2) {
         router1 = r1;

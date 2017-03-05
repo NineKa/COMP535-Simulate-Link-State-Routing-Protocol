@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import socs.network.message.LSA;
 
 
 public class Router {
@@ -32,6 +33,9 @@ public class Router {
     private final String KEY_PROCESS_IP = "socs.network.router.processIP";
     private final String KEY_PROCESS_PORT = "socs.network.router.processPort";
     private final String KEY_SIMULATE_IP = "socs.network.router.ip";
+
+    private int lsa_seq_num = Integer.MIN_VALUE;
+    private lsa_timer timer;
 
     private String generateTabbing(int length) {
         if (length <= 0) return "";
@@ -53,19 +57,75 @@ public class Router {
         return packet;
     }
 
+    private static SOSPFPacket construct_lsa_packet(LSA update_links, Link link, List<Link> ports, RouterDescription rd, int lsa_seq_num) {
+        SOSPFPacket packet = new SOSPFPacket(update_links, ports, rd, lsa_seq_num);
+        packet.srcProcessIP = link.router1.processIPAddress;
+        packet.srcProcessPort = link.router1.processPortNumber;
+        packet.srcWeight = link.weight;
+        packet.srcIP = link.router1.simulatedIPAddress;
+        packet.dstIP = link.router2.simulatedIPAddress;
+        packet.sospfType = SOSPFPacket.LINKSTATE_UPDATE_TYPE;
+        packet.routerID = link.router1.simulatedIPAddress;
+        packet.neighborID = link.router2.simulatedIPAddress;
+        return packet;
+    }
+
+    //Sends lsa to all neighboring nodes
+    public void router_send_lsa_init(){
+        LSA current = new LSA();
+        current = new LSA();
+        current.lsaSeqNumber = lsa_seq_num;
+        current.linkStateID = rd.simulatedIPAddress;
+        for (Link l : ports) {
+            current.add_link(l.router2.simulatedIPAddress, l.router2.processPortNumber, l.weight);
+        }
+        lsd.add_lsa_link(current);
+        for(Link l: ports){
+            if(l.router2.status == RouterStatus.TWO_WAY) {
+                SOSPFPacket send_packets = Router.construct_lsa_packet(null, l, ports, rd, lsa_seq_num);
+                try {
+                    listener.sendMessage(send_packets, send_packets.neighborID);
+                } catch (IOException exception) {
+                    throw new RuntimeException(exception);
+                }
+            }
+        }
+        lsa_seq_num++;
+    }
+    //Sends lsa to all neighboring nodes
+    public void router_send_follower(LSA update_links, String source_sim_ip){
+        if(!lsd.add_lsa_link(update_links)){
+            return;
+        }
+        for(Link l: ports){
+            if(l.router2.status == RouterStatus.TWO_WAY && !source_sim_ip.equals(l.router2.simulatedIPAddress)) {
+                SOSPFPacket send_packets = Router.construct_lsa_packet(update_links, l, ports, rd, lsa_seq_num);
+                try {
+                    listener.sendMessage(send_packets, send_packets.neighborID);
+                } catch (IOException exception) {
+                    throw new RuntimeException(exception);
+                }
+            }
+        }
+        lsa_seq_num++;
+    }
+
     @SuppressWarnings("deprecation")
     public Router(Configuration config) {
-
         rd.simulatedIPAddress = config.getString(KEY_SIMULATE_IP);
         rd.processIPAddress = config.getString(KEY_PROCESS_IP);
         rd.processPortNumber = config.getShort(KEY_PROCESS_PORT);
         lsd = new LinkStateDatabase(rd);
+
+        timer = new lsa_timer(this);
+        new Thread(timer).start();
+
         listener = new RouterActionListener(this, new Consumer<SOSPFPacket>() {
             @Override
             public void accept(SOSPFPacket packet) {
+                String remoteSimulatedIP = packet.routerID;
+                String localSimulatedIP = packet.neighborID;
                 if (packet.sospfType == SOSPFPacket.HELLO_TYPE) {
-                    String remoteSimulatedIP = packet.routerID;
-                    String localSimulatedIP = packet.neighborID;
                     if (!rd.simulatedIPAddress.equals(localSimulatedIP)) {
                         throw new RuntimeException();
                     }
@@ -141,7 +201,7 @@ public class Router {
                     }
 
                 } else if (packet.sospfType == SOSPFPacket.LINKSTATE_UPDATE_TYPE) {
-                    // IGNORE
+                    router_send_follower(packet.lsaArray, packet.srcIP);
                 } else {
                     // IGNORE
                 }
@@ -271,6 +331,10 @@ public class Router {
 
     }
 
+    private void detect_path(String simulated_ip){
+        System.out.println(lsd.get_shortest_path(simulated_ip));
+    }
+
     private RouterCommandBaseVisitor<Void> routerCommandBaseVisitor() {
         return new RouterCommandBaseVisitor<Void>() {
             @Override
@@ -317,6 +381,7 @@ public class Router {
                 System.exit(0);
                 return null;
             }
+
         };
     }
 
@@ -343,15 +408,19 @@ public class Router {
             do {
                 try {
                     String command = br.readLine();
-                    final RouterCommandLexer lexer = new RouterCommandLexer(new ANTLRInputStream(command));
-                    final RouterCommandParser parser = new RouterCommandParser(new CommonTokenStream(lexer));
-                    lexer.removeErrorListeners();
-                    lexer.addErrorListener(routerCommandErrorListener());
-                    parser.removeErrorListeners();
-                    parser.addErrorListener(routerCommandErrorListener());
+                    if(command.indexOf("detect") == -1) {
+                        final RouterCommandLexer lexer = new RouterCommandLexer(new ANTLRInputStream(command));
+                        final RouterCommandParser parser = new RouterCommandParser(new CommonTokenStream(lexer));
+                        lexer.removeErrorListeners();
+                        lexer.addErrorListener(routerCommandErrorListener());
+                        parser.removeErrorListeners();
+                        parser.addErrorListener(routerCommandErrorListener());
 
-                    RouterCommandParser.CommandContext commandContext = parser.command();
-                    routerCommandBaseVisitor().visit(commandContext);
+                        RouterCommandParser.CommandContext commandContext = parser.command();
+                        routerCommandBaseVisitor().visit(commandContext);
+                    }else{
+                        detect_path(command.split(" ")[1]);
+                    }
                 } catch (ParseCancellationException exception) {
                     /* parsing error has occurred */
                     /* ignored */

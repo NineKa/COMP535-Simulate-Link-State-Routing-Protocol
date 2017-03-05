@@ -6,7 +6,6 @@ import com.typesafe.config.ConfigValueFactory;
 
 import java.io.File;
 
-
 public class Configuration {
 
     private Config _config = null;
