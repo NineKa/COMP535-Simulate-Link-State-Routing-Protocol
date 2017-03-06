@@ -17,6 +17,12 @@ public interface RouterCommandVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCommand(RouterCommandParser.CommandContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdDetect}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCmdDetect(RouterCommandParser.CmdDetectContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link RouterCommandParser#cmdAttach}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -41,9 +47,15 @@ public interface RouterCommandVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCmdNeighbors(RouterCommandParser.CmdNeighborsContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link RouterCommandParser#cmdExit}.
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdQuit}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitCmdExit(RouterCommandParser.CmdExitContext ctx);
+	T visitCmdQuit(RouterCommandParser.CmdQuitContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdDebug}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCmdDebug(RouterCommandParser.CmdDebugContext ctx);
 }

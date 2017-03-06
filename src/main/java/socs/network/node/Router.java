@@ -2,6 +2,7 @@ package socs.network.node;
 
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import socs.network.message.LSA;
 import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
 import socs.network.util.parser.RouterCommandBaseVisitor;
@@ -12,12 +13,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-
+import java.util.stream.*;
+import java.util.stream.IntStream;
 
 public class Router {
 
@@ -25,13 +24,17 @@ public class Router {
 
     private RouterDescription rd = new RouterDescription();
 
-    final private List<Link> ports = new LinkedList<>();
+    final public List<Link> ports = new LinkedList<>();
     final private List<Link> initPorts = new LinkedList<>();
     private final RouterActionListener listener;
 
     private final String KEY_PROCESS_IP = "socs.network.router.processIP";
     private final String KEY_PROCESS_PORT = "socs.network.router.processPort";
     private final String KEY_SIMULATE_IP = "socs.network.router.ip";
+
+    private Iterator<Integer> lsaSequenceNumber = IntStream.iterate(0, x -> x + 1).iterator();
+    private Timer lsaUpdateTimer = new Timer();
+    private final int LSA_SEND_INTERVAL_MS = 1000;
 
     private String generateTabbing(int length) {
         if (length <= 0) return "";
@@ -53,19 +56,100 @@ public class Router {
         return packet;
     }
 
+    private static SOSPFPacket constructLSAPacket(LSA updateLinks, Link link, List<Link> ports,
+                                                  RouterDescription routerDescription, int LSASequenceNumber) {
+        SOSPFPacket packet = new SOSPFPacket();
+
+        if (updateLinks == null) {
+            packet.lsa = new LSA();
+            packet.lsa.lsaSeqNumber = LSASequenceNumber;
+            packet.lsa.linkStateID = routerDescription.simulatedIPAddress;
+            for (Link linkIter : ports) {
+                packet.lsa.addLink(
+                        linkIter.router2.simulatedIPAddress,
+                        linkIter.router2.processPortNumber,
+                        linkIter.weight
+                );
+            }
+        } else {
+            packet.lsa = updateLinks;
+        }
+
+        packet.srcProcessIP = link.router1.processIPAddress;
+        packet.srcProcessPort = link.router1.processPortNumber;
+        packet.srcWeight = link.weight;
+        packet.srcIP = link.router1.simulatedIPAddress;
+        packet.dstIP = link.router2.simulatedIPAddress;
+        packet.sospfType = SOSPFPacket.LINKSTATE_UPDATE_TYPE;
+        packet.routerID = link.router1.simulatedIPAddress;
+        packet.neighborID = link.router2.simulatedIPAddress;
+        return packet;
+    }
+
+    private void routerSendLSAInit() {
+        LSA current = new LSA();
+        final int assignedLSASequenceNumber = lsaSequenceNumber.next();
+        current.lsaSeqNumber = assignedLSASequenceNumber;
+        current.linkStateID = rd.simulatedIPAddress;
+        for (Link link : ports) {
+            current.addLink(link.router2.simulatedIPAddress, link.router2.processPortNumber, link.weight);
+        }
+        lsd.addLSALink(current);
+        for (Link link : ports) {
+            if (link.router2.status == RouterStatus.TWO_WAY) {
+                SOSPFPacket packet = constructLSAPacket(null, link, ports, rd, assignedLSASequenceNumber);
+                try {
+                    listener.sendMessage(packet, packet.neighborID);
+                } catch (IOException exception) {
+                    // leap of faith
+                }
+            }
+
+        }
+    }
+
+    private void routerSendLSAFollower(LSA updateLinks, String sourceSimulateIP) {
+        if (!lsd.addLSALink(updateLinks)) return;
+
+        for (Link link : ports) {
+            final int assignedLSASequenceNumber = lsaSequenceNumber.next();
+            if (sourceSimulateIP.equals(link.router2.simulatedIPAddress)) continue;
+            if (link.router2.status != RouterStatus.TWO_WAY) continue;
+
+            SOSPFPacket packet = constructLSAPacket(updateLinks, link, ports, rd, assignedLSASequenceNumber);
+            try {
+                listener.sendMessage(packet, packet.neighborID);
+            } catch (IOException exception) {
+                // leap of faith
+            }
+        }
+    }
+
     @SuppressWarnings("deprecation")
     public Router(Configuration config) {
 
         rd.simulatedIPAddress = config.getString(KEY_SIMULATE_IP);
         rd.processIPAddress = config.getString(KEY_PROCESS_IP);
         rd.processPortNumber = config.getShort(KEY_PROCESS_PORT);
-        lsd = new LinkStateDatabase(rd);
+        lsd = new LinkStateDatabase(rd, this);
+
+        lsaUpdateTimer.schedule(new TimerTask() {
+            private final int LSA_TIMEOUT_INTERVAL_MS = 2000;
+
+            @Override
+            public void run() {
+                routerSendLSAInit();
+                lsd.removeOutdatedLink(LSA_TIMEOUT_INTERVAL_MS);
+            }
+        }, 0, LSA_SEND_INTERVAL_MS);
+
         listener = new RouterActionListener(this, new Consumer<SOSPFPacket>() {
             @Override
             public void accept(SOSPFPacket packet) {
+                String remoteSimulatedIP = packet.routerID;
+                String localSimulatedIP = packet.neighborID;
+
                 if (packet.sospfType == SOSPFPacket.HELLO_TYPE) {
-                    String remoteSimulatedIP = packet.routerID;
-                    String localSimulatedIP = packet.neighborID;
                     if (!rd.simulatedIPAddress.equals(localSimulatedIP)) {
                         throw new RuntimeException();
                     }
@@ -141,7 +225,7 @@ public class Router {
                     }
 
                 } else if (packet.sospfType == SOSPFPacket.LINKSTATE_UPDATE_TYPE) {
-                    // IGNORE
+                    routerSendLSAFollower(packet.lsa, packet.srcIP);
                 } else {
                     // IGNORE
                 }
@@ -166,7 +250,7 @@ public class Router {
      * @param destinationIP the ip adderss of the destination simulated router
      */
     private void processDetect(String destinationIP) {
-
+        System.out.println(": " + lsd.getShortestPath(destinationIP));
     }
 
     /**
@@ -268,7 +352,8 @@ public class Router {
      * disconnect with all neighbors and quit the program
      */
     private void processQuit() {
-
+        lsaUpdateTimer.cancel();
+        System.exit(0);
     }
 
     private RouterCommandBaseVisitor<Void> routerCommandBaseVisitor() {
@@ -313,8 +398,33 @@ public class Router {
             }
 
             @Override
-            public Void visitCmdExit(RouterCommandParser.CmdExitContext cmdExitContext) {
-                System.exit(0);
+            public Void visitCmdQuit(RouterCommandParser.CmdQuitContext cmdQuitContext) {
+                processQuit();
+                return null;
+            }
+
+            @Override
+            public Void visitCmdDetect(RouterCommandParser.CmdDetectContext cmdDetectContext) {
+                processDetect(cmdDetectContext.simulateIP.getText());
+                return null;
+            }
+
+            @Override
+            public Void visitCmdDebug(RouterCommandParser.CmdDebugContext cmdDebugContext) {
+                switch (cmdDebugContext.select.getText()) {
+                    case "info" : {
+                        System.out.println(": Simulated IP Address: " + rd.simulatedIPAddress);
+                        System.out.println(": Process IP Address: " + rd.processIPAddress);
+                        System.out.println(": Process Port Number: " + rd.processPortNumber);
+                        return null;
+                    }
+                    case "lsd" : {
+                        for (String key : lsd._store.keySet()) {
+                            System.out.println(": " + lsd._store.get(key).toString());
+                        }
+                        return null;
+                    }
+                }
                 return null;
             }
         };
@@ -340,7 +450,7 @@ public class Router {
         try {
             InputStreamReader isReader = new InputStreamReader(System.in);
             BufferedReader br = new BufferedReader(isReader);
-            do {
+            for (;;) {
                 try {
                     String command = br.readLine();
                     final RouterCommandLexer lexer = new RouterCommandLexer(new ANTLRInputStream(command));
@@ -356,8 +466,7 @@ public class Router {
                     /* parsing error has occurred */
                     /* ignored */
                 }
-            } while (true);
-
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

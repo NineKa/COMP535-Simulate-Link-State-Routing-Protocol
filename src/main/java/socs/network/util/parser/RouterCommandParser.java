@@ -19,22 +19,23 @@ public class RouterCommandParser extends Parser {
 	public static final int
 		IP_ADDRESS=1, NUMBER=2, QUOTED_STRING=3, CMD_DETECT=4, CMD_DISCONNECT=5, 
 		CMD_QUIT=6, CMD_ATTACH=7, CMD_START=8, CMD_CONNECT=9, CMD_NEIGHBORS=10, 
-		CMD_EXIT=11, NEWLINE=12, WHITESPACE=13;
+		CMD_DEBUG=11, CMD_DEBUG_SELECT=12, NEWLINE=13, WHITESPACE=14;
 	public static final int
-		RULE_command = 0, RULE_cmdAttach = 1, RULE_cmdAttachFile = 2, RULE_cmdStart = 3, 
-		RULE_cmdNeighbors = 4, RULE_cmdExit = 5;
+		RULE_command = 0, RULE_cmdDetect = 1, RULE_cmdAttach = 2, RULE_cmdAttachFile = 3, 
+		RULE_cmdStart = 4, RULE_cmdNeighbors = 5, RULE_cmdQuit = 6, RULE_cmdDebug = 7;
 	public static final String[] ruleNames = {
-		"command", "cmdAttach", "cmdAttachFile", "cmdStart", "cmdNeighbors", "cmdExit"
+		"command", "cmdDetect", "cmdAttach", "cmdAttachFile", "cmdStart", "cmdNeighbors", 
+		"cmdQuit", "cmdDebug"
 	};
 
 	private static final String[] _LITERAL_NAMES = {
 		null, null, null, null, "'detect'", "'disconnect'", "'quit'", "'attach'", 
-		"'start'", "'connect'", "'neighbors'", "'exit'"
+		"'start'", "'connect'", "'neighbors'", "'debug'"
 	};
 	private static final String[] _SYMBOLIC_NAMES = {
 		null, "IP_ADDRESS", "NUMBER", "QUOTED_STRING", "CMD_DETECT", "CMD_DISCONNECT", 
 		"CMD_QUIT", "CMD_ATTACH", "CMD_START", "CMD_CONNECT", "CMD_NEIGHBORS", 
-		"CMD_EXIT", "NEWLINE", "WHITESPACE"
+		"CMD_DEBUG", "CMD_DEBUG_SELECT", "NEWLINE", "WHITESPACE"
 	};
 	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
 
@@ -86,6 +87,9 @@ public class RouterCommandParser extends Parser {
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 	public static class CommandContext extends ParserRuleContext {
+		public CmdDetectContext cmdDetect() {
+			return getRuleContext(CmdDetectContext.class,0);
+		}
 		public CmdAttachContext cmdAttach() {
 			return getRuleContext(CmdAttachContext.class,0);
 		}
@@ -98,8 +102,11 @@ public class RouterCommandParser extends Parser {
 		public CmdNeighborsContext cmdNeighbors() {
 			return getRuleContext(CmdNeighborsContext.class,0);
 		}
-		public CmdExitContext cmdExit() {
-			return getRuleContext(CmdExitContext.class,0);
+		public CmdQuitContext cmdQuit() {
+			return getRuleContext(CmdQuitContext.class,0);
+		}
+		public CmdDebugContext cmdDebug() {
+			return getRuleContext(CmdDebugContext.class,0);
 		}
 		public CommandContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -124,44 +131,104 @@ public class RouterCommandParser extends Parser {
 		CommandContext _localctx = new CommandContext(_ctx, getState());
 		enterRule(_localctx, 0, RULE_command);
 		try {
-			setState(17);
+			setState(23);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(12);
-				cmdAttach();
+				setState(16);
+				cmdDetect();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(13);
-				cmdAttachFile();
+				setState(17);
+				cmdAttach();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(14);
-				cmdStart();
+				setState(18);
+				cmdAttachFile();
 				}
 				break;
 			case 4:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(15);
-				cmdNeighbors();
+				setState(19);
+				cmdStart();
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(16);
-				cmdExit();
+				setState(20);
+				cmdNeighbors();
 				}
 				break;
+			case 6:
+				enterOuterAlt(_localctx, 6);
+				{
+				setState(21);
+				cmdQuit();
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(22);
+				cmdDebug();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class CmdDetectContext extends ParserRuleContext {
+		public Token simulateIP;
+		public TerminalNode CMD_DETECT() { return getToken(RouterCommandParser.CMD_DETECT, 0); }
+		public TerminalNode IP_ADDRESS() { return getToken(RouterCommandParser.IP_ADDRESS, 0); }
+		public CmdDetectContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_cmdDetect; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).enterCmdDetect(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdDetect(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdDetect(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final CmdDetectContext cmdDetect() throws RecognitionException {
+		CmdDetectContext _localctx = new CmdDetectContext(_ctx, getState());
+		enterRule(_localctx, 2, RULE_cmdDetect);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(25);
+			match(CMD_DETECT);
+			setState(26);
+			((CmdDetectContext)_localctx).simulateIP = match(IP_ADDRESS);
 			}
 		}
 		catch (RecognitionException re) {
@@ -210,19 +277,19 @@ public class RouterCommandParser extends Parser {
 
 	public final CmdAttachContext cmdAttach() throws RecognitionException {
 		CmdAttachContext _localctx = new CmdAttachContext(_ctx, getState());
-		enterRule(_localctx, 2, RULE_cmdAttach);
+		enterRule(_localctx, 4, RULE_cmdAttach);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(19);
+			setState(28);
 			match(CMD_ATTACH);
-			setState(20);
+			setState(29);
 			((CmdAttachContext)_localctx).processIP = match(IP_ADDRESS);
-			setState(21);
+			setState(30);
 			((CmdAttachContext)_localctx).processPort = match(NUMBER);
-			setState(22);
+			setState(31);
 			((CmdAttachContext)_localctx).simulateIP = match(IP_ADDRESS);
-			setState(23);
+			setState(32);
 			((CmdAttachContext)_localctx).weight = match(NUMBER);
 			}
 		}
@@ -264,15 +331,15 @@ public class RouterCommandParser extends Parser {
 
 	public final CmdAttachFileContext cmdAttachFile() throws RecognitionException {
 		CmdAttachFileContext _localctx = new CmdAttachFileContext(_ctx, getState());
-		enterRule(_localctx, 4, RULE_cmdAttachFile);
+		enterRule(_localctx, 6, RULE_cmdAttachFile);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(25);
+			setState(34);
 			match(CMD_ATTACH);
-			setState(26);
+			setState(35);
 			((CmdAttachFileContext)_localctx).path = match(QUOTED_STRING);
-			setState(27);
+			setState(36);
 			((CmdAttachFileContext)_localctx).weight = match(NUMBER);
 			}
 		}
@@ -310,11 +377,11 @@ public class RouterCommandParser extends Parser {
 
 	public final CmdStartContext cmdStart() throws RecognitionException {
 		CmdStartContext _localctx = new CmdStartContext(_ctx, getState());
-		enterRule(_localctx, 6, RULE_cmdStart);
+		enterRule(_localctx, 8, RULE_cmdStart);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(29);
+			setState(38);
 			match(CMD_START);
 			}
 		}
@@ -352,11 +419,11 @@ public class RouterCommandParser extends Parser {
 
 	public final CmdNeighborsContext cmdNeighbors() throws RecognitionException {
 		CmdNeighborsContext _localctx = new CmdNeighborsContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_cmdNeighbors);
+		enterRule(_localctx, 10, RULE_cmdNeighbors);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(31);
+			setState(40);
 			match(CMD_NEIGHBORS);
 			}
 		}
@@ -371,35 +438,81 @@ public class RouterCommandParser extends Parser {
 		return _localctx;
 	}
 
-	public static class CmdExitContext extends ParserRuleContext {
-		public TerminalNode CMD_EXIT() { return getToken(RouterCommandParser.CMD_EXIT, 0); }
-		public CmdExitContext(ParserRuleContext parent, int invokingState) {
+	public static class CmdQuitContext extends ParserRuleContext {
+		public TerminalNode CMD_QUIT() { return getToken(RouterCommandParser.CMD_QUIT, 0); }
+		public CmdQuitContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_cmdExit; }
+		@Override public int getRuleIndex() { return RULE_cmdQuit; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).enterCmdExit(this);
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).enterCmdQuit(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdExit(this);
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdQuit(this);
 		}
 		@Override
 		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdExit(this);
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdQuit(this);
 			else return visitor.visitChildren(this);
 		}
 	}
 
-	public final CmdExitContext cmdExit() throws RecognitionException {
-		CmdExitContext _localctx = new CmdExitContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_cmdExit);
+	public final CmdQuitContext cmdQuit() throws RecognitionException {
+		CmdQuitContext _localctx = new CmdQuitContext(_ctx, getState());
+		enterRule(_localctx, 12, RULE_cmdQuit);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(33);
-			match(CMD_EXIT);
+			setState(42);
+			match(CMD_QUIT);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class CmdDebugContext extends ParserRuleContext {
+		public Token select;
+		public TerminalNode CMD_DEBUG() { return getToken(RouterCommandParser.CMD_DEBUG, 0); }
+		public TerminalNode CMD_DEBUG_SELECT() { return getToken(RouterCommandParser.CMD_DEBUG_SELECT, 0); }
+		public CmdDebugContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_cmdDebug; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).enterCmdDebug(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof RouterCommandListener ) ((RouterCommandListener)listener).exitCmdDebug(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof RouterCommandVisitor ) return ((RouterCommandVisitor<? extends T>)visitor).visitCmdDebug(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final CmdDebugContext cmdDebug() throws RecognitionException {
+		CmdDebugContext _localctx = new CmdDebugContext(_ctx, getState());
+		enterRule(_localctx, 14, RULE_cmdDebug);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(44);
+			match(CMD_DEBUG);
+			setState(45);
+			((CmdDebugContext)_localctx).select = match(CMD_DEBUG_SELECT);
 			}
 		}
 		catch (RecognitionException re) {
@@ -414,16 +527,19 @@ public class RouterCommandParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\17&\4\2\t\2\4\3\t"+
-		"\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3\2\3\2\3\2\3\2\3\2\5\2\24\n\2\3\3"+
-		"\3\3\3\3\3\3\3\3\3\3\3\4\3\4\3\4\3\4\3\5\3\5\3\6\3\6\3\7\3\7\3\7\2\2\b"+
-		"\2\4\6\b\n\f\2\2#\2\23\3\2\2\2\4\25\3\2\2\2\6\33\3\2\2\2\b\37\3\2\2\2"+
-		"\n!\3\2\2\2\f#\3\2\2\2\16\24\5\4\3\2\17\24\5\6\4\2\20\24\5\b\5\2\21\24"+
-		"\5\n\6\2\22\24\5\f\7\2\23\16\3\2\2\2\23\17\3\2\2\2\23\20\3\2\2\2\23\21"+
-		"\3\2\2\2\23\22\3\2\2\2\24\3\3\2\2\2\25\26\7\t\2\2\26\27\7\3\2\2\27\30"+
-		"\7\4\2\2\30\31\7\3\2\2\31\32\7\4\2\2\32\5\3\2\2\2\33\34\7\t\2\2\34\35"+
-		"\7\5\2\2\35\36\7\4\2\2\36\7\3\2\2\2\37 \7\n\2\2 \t\3\2\2\2!\"\7\f\2\2"+
-		"\"\13\3\2\2\2#$\7\r\2\2$\r\3\2\2\2\3\23";
+		"\3\u0430\ud6d1\u8206\uad2d\u4417\uaef1\u8d80\uaadd\3\20\62\4\2\t\2\4\3"+
+		"\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\3\2\3\2\3\2\3\2\3"+
+		"\2\3\2\3\2\5\2\32\n\2\3\3\3\3\3\3\3\4\3\4\3\4\3\4\3\4\3\4\3\5\3\5\3\5"+
+		"\3\5\3\6\3\6\3\7\3\7\3\b\3\b\3\t\3\t\3\t\3\t\2\2\n\2\4\6\b\n\f\16\20\2"+
+		"\2/\2\31\3\2\2\2\4\33\3\2\2\2\6\36\3\2\2\2\b$\3\2\2\2\n(\3\2\2\2\f*\3"+
+		"\2\2\2\16,\3\2\2\2\20.\3\2\2\2\22\32\5\4\3\2\23\32\5\6\4\2\24\32\5\b\5"+
+		"\2\25\32\5\n\6\2\26\32\5\f\7\2\27\32\5\16\b\2\30\32\5\20\t\2\31\22\3\2"+
+		"\2\2\31\23\3\2\2\2\31\24\3\2\2\2\31\25\3\2\2\2\31\26\3\2\2\2\31\27\3\2"+
+		"\2\2\31\30\3\2\2\2\32\3\3\2\2\2\33\34\7\6\2\2\34\35\7\3\2\2\35\5\3\2\2"+
+		"\2\36\37\7\t\2\2\37 \7\3\2\2 !\7\4\2\2!\"\7\3\2\2\"#\7\4\2\2#\7\3\2\2"+
+		"\2$%\7\t\2\2%&\7\5\2\2&\'\7\4\2\2\'\t\3\2\2\2()\7\n\2\2)\13\3\2\2\2*+"+
+		"\7\f\2\2+\r\3\2\2\2,-\7\b\2\2-\17\3\2\2\2./\7\r\2\2/\60\7\16\2\2\60\21"+
+		"\3\2\2\2\3\31";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

@@ -18,6 +18,16 @@ public interface RouterCommandListener extends ParseTreeListener {
 	 */
 	void exitCommand(RouterCommandParser.CommandContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdDetect}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdDetect(RouterCommandParser.CmdDetectContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdDetect}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdDetect(RouterCommandParser.CmdDetectContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link RouterCommandParser#cmdAttach}.
 	 * @param ctx the parse tree
 	 */
@@ -58,13 +68,23 @@ public interface RouterCommandListener extends ParseTreeListener {
 	 */
 	void exitCmdNeighbors(RouterCommandParser.CmdNeighborsContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link RouterCommandParser#cmdExit}.
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdQuit}.
 	 * @param ctx the parse tree
 	 */
-	void enterCmdExit(RouterCommandParser.CmdExitContext ctx);
+	void enterCmdQuit(RouterCommandParser.CmdQuitContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link RouterCommandParser#cmdExit}.
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdQuit}.
 	 * @param ctx the parse tree
 	 */
-	void exitCmdExit(RouterCommandParser.CmdExitContext ctx);
+	void exitCmdQuit(RouterCommandParser.CmdQuitContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdDebug}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdDebug(RouterCommandParser.CmdDebugContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdDebug}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdDebug(RouterCommandParser.CmdDebugContext ctx);
 }

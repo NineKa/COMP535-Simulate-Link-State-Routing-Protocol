@@ -7,12 +7,19 @@ To simulate the real-world network environment, you have to start multiple insta
 By defining the format of the messages transmitting between the program instances, as well as the parser and the handlers of these messages, you simulate the routing protocol with the user- space processes.
 
 ## Command-line Console
-Besides the components introduced above, you have to develop a console for the router. When you start the router program, the terminal interface (command line based) should show to the user, and it allows the user to input following commands:
-- attach [Process IP] [Process Port] [IP Address] [Link Weight]
-- attach "[Configure File]" [Link Weight]
-- start
-- connect [Process IP] [Process Port] [IP Address] [Link Weight]
-- disconnect [Port Number]
-- detect [IP Address]
-- neighbors
-- quit
+| Status      | Command                                                        |
+|-------------|----------------------------------------------------------------|
+| :o:         | attach [Process IP] [Process Port] [IP Address] [Link Weight]  |
+| :o:         | attach "[Configure File]" [Link Weight]                        |
+| :o:         | start                                                          |
+| :x:         | connect [Process IP] [Process Port] [IP Address] [Link Weight] |
+| :x:         | disconnect [Port Number]                                       |
+| :o:         | detect [IP Address]                                            |
+| :o:         | neighbors                                                      |
+| :o:         | quit                                                           |
+
+## Debug Command-line 
+| Command     | Description                                                                                     |
+|-------------|-------------------------------------------------------------------------------------------------|
+| debug info  | print current router simulated IP address, process IP address and process port number on screen |
+| debug lsd   | print link state database on screen                                                             |

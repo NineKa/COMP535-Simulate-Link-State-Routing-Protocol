@@ -1,17 +1,21 @@
 grammar RouterCommand;
 
-command :   cmdAttach
+command :   cmdDetect
+        |   cmdAttach
         |   cmdAttachFile
         |   cmdStart
         |   cmdNeighbors
-        |   cmdExit   // TODO : remove this in the future
+        |   cmdQuit
+        |   cmdDebug
         ;
 
+cmdDetect : CMD_DETECT simulateIP=IP_ADDRESS;
 cmdAttach : CMD_ATTACH processIP=IP_ADDRESS processPort=NUMBER simulateIP=IP_ADDRESS weight=NUMBER;
 cmdAttachFile : CMD_ATTACH path=QUOTED_STRING weight=NUMBER;
 cmdStart : CMD_START;
 cmdNeighbors : CMD_NEIGHBORS;
-cmdExit : CMD_EXIT;  // TODO : remove this in the future
+cmdQuit : CMD_QUIT;
+cmdDebug : CMD_DEBUG select=CMD_DEBUG_SELECT;
 
 IP_ADDRESS : [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]? '.' [0-9][0-9]?[0-9]?;
 NUMBER : '0' | ( [0-9][0-9]* );
@@ -27,7 +31,8 @@ CMD_START : 'start';
 CMD_CONNECT : 'connect';
 CMD_NEIGHBORS : 'neighbors';
 
-CMD_EXIT : 'exit';  // TODO : remove this in the future
+CMD_DEBUG : 'debug';
+CMD_DEBUG_SELECT : 'info' | 'lsd';
 
 NEWLINE : [\r\n] -> skip;
 WHITESPACE : [ \t]+ -> skip;

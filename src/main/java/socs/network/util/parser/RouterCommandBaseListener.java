@@ -28,6 +28,18 @@ public class RouterCommandBaseListener implements RouterCommandListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterCmdDetect(RouterCommandParser.CmdDetectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCmdDetect(RouterCommandParser.CmdDetectContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterCmdAttach(RouterCommandParser.CmdAttachContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -76,13 +88,25 @@ public class RouterCommandBaseListener implements RouterCommandListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCmdExit(RouterCommandParser.CmdExitContext ctx) { }
+	@Override public void enterCmdQuit(RouterCommandParser.CmdQuitContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCmdExit(RouterCommandParser.CmdExitContext ctx) { }
+	@Override public void exitCmdQuit(RouterCommandParser.CmdQuitContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterCmdDebug(RouterCommandParser.CmdDebugContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCmdDebug(RouterCommandParser.CmdDebugContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
