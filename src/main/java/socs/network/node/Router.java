@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.misc.ParseCancellationException;
 import socs.network.message.LSA;
 import socs.network.message.SOSPFPacket;
 import socs.network.util.Configuration;
+import socs.network.util.Logger;
 import socs.network.util.parser.RouterCommandBaseVisitor;
 import socs.network.util.parser.RouterCommandLexer;
 import socs.network.util.parser.RouterCommandParser;
@@ -19,8 +20,7 @@ import java.util.stream.*;
 import java.util.stream.IntStream;
 
 public class Router {
-
-    protected LinkStateDatabase lsd;
+    private LinkStateDatabase lsd;
 
     private RouterDescription rd = new RouterDescription();
 
@@ -154,8 +154,8 @@ public class Router {
                         throw new RuntimeException();
                     }
 
-                    System.out.println(String.format(
-                            ": [%s] received HELLO from %s;",
+                    Logger.getSingleton().write(String.format(
+                            "[%s] received HELLO from %s;",
                             localSimulatedIP + generateTabbing(15 - localSimulatedIP.length()),
                             remoteSimulatedIP
                     ));
@@ -185,8 +185,8 @@ public class Router {
                     synchronized (link) {
                         if (link.router2.status == RouterStatus.UNKNOWN) {
                             link.router2.status = RouterStatus.INIT;
-                            System.out.println(String.format(
-                                    ": [%s] set %s state to %s;",
+                            Logger.getSingleton().write(String.format(
+                                    "[%s] set %s state to %s;",
                                     localSimulatedIP + generateTabbing(15 - localSimulatedIP.length()),
                                     remoteSimulatedIP,
                                     link.router2.status.toString()
@@ -200,8 +200,8 @@ public class Router {
                             }
                         } else if (link.router2.status == RouterStatus.INIT) {
                             link.router2.status = RouterStatus.TWO_WAY;
-                            System.out.println(String.format(
-                                    ": [%s] set %s state to %s;",
+                            Logger.getSingleton().write(String.format(
+                                    "[%s] set %s state to %s;",
                                     localSimulatedIP + generateTabbing(15 - localSimulatedIP.length()),
                                     remoteSimulatedIP,
                                     link.router2.status.toString()
@@ -250,7 +250,7 @@ public class Router {
      * @param destinationIP the ip adderss of the destination simulated router
      */
     private void processDetect(String destinationIP) {
-        System.out.println(": " + lsd.getShortestPath(destinationIP));
+        Logger.getSingleton().write(lsd.getShortestPath(destinationIP));
     }
 
     /**
@@ -276,7 +276,7 @@ public class Router {
                         router.router2.processPortNumber == processPort) ||
                         router.router2.simulatedIPAddress.equals(simulatedIP)
         )) {
-            System.out.println(": duplicate attach -> ignored");
+            Logger.getSingleton().write("duplicate attach -> ignored");
         }
 
         RouterDescription localRouter = this.rd;
@@ -336,14 +336,13 @@ public class Router {
     private void processNeighbors() {
         synchronized (ports) {
             for (Link link : ports.stream().filter(link -> link.router2.status == RouterStatus.TWO_WAY).collect(Collectors.toList())) {
-                String routerString = String.format(
-                        ": Router %s @ [%s:%s] status: %s",
+                Logger.getSingleton().write(String.format(
+                        "Router %s @ [%s:%s] status: %s",
                         link.router2.simulatedIPAddress + generateTabbing(15 - link.router2.simulatedIPAddress.length()),
                         link.router2.processIPAddress + generateTabbing(15 - link.router2.processIPAddress.length()),
                         link.router2.processPortNumber + generateTabbing(4 - Short.toString(link.router2.processPortNumber).length()).length(),
                         link.router2.status.toString()
-                );
-                System.out.println(routerString);
+                ));
             }
         }
     }
@@ -413,14 +412,14 @@ public class Router {
             public Void visitCmdDebug(RouterCommandParser.CmdDebugContext cmdDebugContext) {
                 switch (cmdDebugContext.select.getText()) {
                     case "info" : {
-                        System.out.println(": Simulated IP Address: " + rd.simulatedIPAddress);
-                        System.out.println(": Process IP Address: " + rd.processIPAddress);
-                        System.out.println(": Process Port Number: " + rd.processPortNumber);
+                        Logger.getSingleton().write("Simulated IP Address: " + rd.simulatedIPAddress);
+                        Logger.getSingleton().write("Process IP Address: " + rd.processIPAddress);
+                        Logger.getSingleton().write("Process Port Number: " + rd.processPortNumber);
                         return null;
                     }
                     case "lsd" : {
                         for (String key : lsd._store.keySet()) {
-                            System.out.println(": " + lsd._store.get(key).toString());
+                            Logger.getSingleton().write(lsd._store.get(key).toString());
                         }
                         return null;
                     }

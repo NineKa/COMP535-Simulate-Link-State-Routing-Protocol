@@ -2,11 +2,16 @@ package socs.network;
 
 import socs.network.node.Router;
 import socs.network.util.Configuration;
+import socs.network.util.Logger;
+import sun.rmi.runtime.Log;
 
 import java.io.File;
 
 public class Main {
     public static void main(String[] args) {
+        Logger.setLogger(System.out);
+        Logger.getSingleton().setPrefix(": ");
+
         if (args.length != 1) {
             System.out.println("usage: program [router configure]");
             System.exit(1);
@@ -16,6 +21,7 @@ public class Main {
         }
         Router router = new Router(new Configuration(args[0]));
         router.terminal();
+
         System.exit(0);
     }
 }
