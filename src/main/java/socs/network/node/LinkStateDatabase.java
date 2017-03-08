@@ -28,10 +28,6 @@ public class LinkStateDatabase {
      * output the shortest path from this router to the destination with the given IP address
      */
     String getShortestPath(String destinationIP) {
-        /*LSAGraph lsaGraph = new LSAGraph();
-        lsaGraph.build_graph(_store);
-        lsaGraph.djistra_cost(rd.simulatedIPAddress);
-        return lsaGraph.get_shortest_path(rd.simulatedIPAddress, destinationIP);*/
         LSAGraph lsaGraph = new LSAGraph(_store);
         return lsaGraph.getTraceString(rd.simulatedIPAddress, destinationIP);
     }
