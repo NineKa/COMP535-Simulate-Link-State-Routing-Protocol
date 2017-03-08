@@ -56,8 +56,6 @@ public class LSAGraph extends Graph<String, Integer> {
         Pair<Map<Vertex<String, Integer>, Integer>,
                 Map<Vertex<String, Integer>, Vertex<String, Integer>>> dijkstraInfo = dijkstra(source);
 
-        System.out.println(dijkstraInfo.getValue1());
-
         LinkedList<Vertex<String, Integer>> traceList = new LinkedList<>();
         Vertex<String, Integer> destinationVertex = selectNodeByTag(destination);
         traceList.add(destinationVertex);
@@ -65,8 +63,6 @@ public class LSAGraph extends Graph<String, Integer> {
                   dijkstraInfo.getValue1().get(traceList.getFirst()).getTag().equals(source)     )) {
             traceList.addFirst(dijkstraInfo.getValue1().get(traceList.getFirst()));
         }
-
-        System.out.println(traceList);
 
         if (dijkstraInfo.getValue1().get(traceList.getFirst()) == null) {
             return "Unable to find a route";
