@@ -2,7 +2,7 @@ package socs.network.node;
 
 import socs.network.message.LSA;
 import socs.network.message.LinkDescription;
-import socs.network.util.LSAGraph;
+import socs.network.util.graph.LSAGraph;
 
 import java.util.Collection;
 import java.util.Date;
@@ -28,10 +28,12 @@ public class LinkStateDatabase {
      * output the shortest path from this router to the destination with the given IP address
      */
     String getShortestPath(String destinationIP) {
-        LSAGraph lsaGraph = new LSAGraph();
+        /*LSAGraph lsaGraph = new LSAGraph();
         lsaGraph.build_graph(_store);
         lsaGraph.djistra_cost(rd.simulatedIPAddress);
-        return lsaGraph.get_shortest_path(rd.simulatedIPAddress, destinationIP);
+        return lsaGraph.get_shortest_path(rd.simulatedIPAddress, destinationIP);*/
+        LSAGraph lsaGraph = new LSAGraph(_store);
+        return lsaGraph.getTraceString(rd.simulatedIPAddress, destinationIP);
     }
 
     //initialize the linkstate database by adding an entry about the router itself
