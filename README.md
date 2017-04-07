@@ -12,8 +12,9 @@ By defining the format of the messages transmitting between the program instance
 | :o:         | attach [Process IP] [Process Port] [IP Address] [Link Weight]  |
 | :o:         | attach "[Configure File]" [Link Weight]                        |
 | :o:         | start                                                          |
-| :x:         | connect [Process IP] [Process Port] [IP Address] [Link Weight] |
-| :x:         | disconnect [Port Number]                                       |
+| :o:         | connect [Process IP] [Process Port] [IP Address] [Link Weight] |
+| :o:         | connect "[Configure File]" [Link Weight]                       |
+| :o:         | disconnect [Port Number]                                       |
 | :o:         | detect [IP Address]                                            |
 | :o:         | neighbors                                                      |
 | :o:         | quit                                                           |

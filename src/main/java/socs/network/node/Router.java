@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.*;
@@ -34,6 +36,7 @@ public class Router {
     private final String KEY_PROCESS_PORT = "socs.network.router.processPort";
     private final String KEY_SIMULATE_IP = "socs.network.router.ip";
 
+    private Lock lsaSequenceNumberAccessLock = new ReentrantLock();
     private Iterator<Integer> lsaSequenceNumber = IntStream.iterate(0, x -> x + 1).iterator();
     private Timer lsaUpdateTimer = new Timer();
     private final int LSA_SEND_INTERVAL_MS = 1000;
@@ -43,6 +46,29 @@ public class Router {
         StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < length; i++) stringBuilder.append(' ');
         return stringBuilder.toString();
+    }
+
+    private static SOSPFPacket constructLinkWeightUpdatePacket(Link link, short update) {
+        SOSPFPacket packet = new SOSPFPacket();
+        packet.srcProcessIP = link.router1.processIPAddress;
+        packet.srcProcessPort = link.router1.processPortNumber;
+        packet.srcWeight = update;
+        packet.srcIP = link.router1.simulatedIPAddress;
+        packet.dstIP = link.router2.simulatedIPAddress;
+        packet.sospfType = SOSPFPacket.LINKSTATE_CONNECT_UPDATE;
+        packet.updatedWeight = update;
+        return packet;
+    }
+
+    private static SOSPFPacket constructDisconnectPacket(Link link) {
+        SOSPFPacket packet = new SOSPFPacket();
+        packet.srcProcessIP = link.router1.processIPAddress;
+        packet.srcProcessPort = link.router1.processPortNumber;
+        packet.srcWeight = link.weight;
+        packet.srcIP = link.router1.simulatedIPAddress;
+        packet.dstIP = link.router2.simulatedIPAddress;
+        packet.sospfType = SOSPFPacket.LINKSTATE_DISCONNECT;
+        return packet;
     }
 
     private static SOSPFPacket constructHandshakePacket(Link link) {
@@ -90,39 +116,46 @@ public class Router {
 
     private void routerSendLSAInit() {
         LSA current = new LSA();
+        lsaSequenceNumberAccessLock.lock();
         final int assignedLSASequenceNumber = lsaSequenceNumber.next();
+        lsaSequenceNumberAccessLock.unlock();
         current.lsaSeqNumber = assignedLSASequenceNumber;
         current.linkStateID = rd.simulatedIPAddress;
-        for (Link link : ports) {
-            current.addLink(link.router2.simulatedIPAddress, link.router2.processPortNumber, link.weight);
-        }
-        lsd.addLSALink(current);
-        for (Link link : ports) {
-            if (link.router2.status == RouterStatus.TWO_WAY) {
-                SOSPFPacket packet = constructLSAPacket(null, link, ports, rd, assignedLSASequenceNumber);
-                try {
-                    listener.sendMessage(packet, packet.neighborID);
-                } catch (IOException exception) {
-                    // leap of faith
+        synchronized (ports) {
+            for (Link link : ports) {
+                current.addLink(link.router2.simulatedIPAddress, link.router2.processPortNumber, link.weight);
+            }
+            lsd.addLSALink(current);
+            for (Link link : ports) {
+                if (link.router2.status == RouterStatus.TWO_WAY) {
+                    SOSPFPacket packet = constructLSAPacket(null, link, ports, rd, assignedLSASequenceNumber);
+                    try {
+                        listener.sendMessage(packet, packet.neighborID);
+                    } catch (IOException exception) {
+                        // leap of faith
+                    }
                 }
             }
-
         }
     }
 
     private void routerSendLSAFollower(LSA updateLinks, String sourceSimulateIP) {
         if (!lsd.addLSALink(updateLinks)) return;
 
-        for (Link link : ports) {
-            final int assignedLSASequenceNumber = lsaSequenceNumber.next();
-            if (sourceSimulateIP.equals(link.router2.simulatedIPAddress)) continue;
-            if (link.router2.status != RouterStatus.TWO_WAY) continue;
+        synchronized (ports) {
+            for (Link link : ports) {
+                lsaSequenceNumberAccessLock.lock();
+                final int assignedLSASequenceNumber = lsaSequenceNumber.next();
+                lsaSequenceNumberAccessLock.unlock();
+                if (sourceSimulateIP.equals(link.router2.simulatedIPAddress)) continue;
+                if (link.router2.status != RouterStatus.TWO_WAY) continue;
 
-            SOSPFPacket packet = constructLSAPacket(updateLinks, link, ports, rd, assignedLSASequenceNumber);
-            try {
-                listener.sendMessage(packet, packet.neighborID);
-            } catch (IOException exception) {
-                // leap of faith
+                SOSPFPacket packet = constructLSAPacket(updateLinks, link, ports, rd, assignedLSASequenceNumber);
+                try {
+                    listener.sendMessage(packet, packet.neighborID);
+                } catch (IOException exception) {
+                    // leap of faith
+                }
             }
         }
     }
@@ -228,8 +261,26 @@ public class Router {
 
                 } else if (packet.sospfType == SOSPFPacket.LINKSTATE_UPDATE_TYPE) {
                     routerSendLSAFollower(packet.lsa, packet.srcIP);
-                } else {
-                    // IGNORE
+                } else if (packet.sospfType == SOSPFPacket.LINKSTATE_CONNECT_UPDATE) {
+                    synchronized (ports) {
+                        for (Link link : ports) {
+                            if (link.router2.simulatedIPAddress.equals(packet.srcIP)) {
+                                link.weight = packet.updatedWeight;
+                            }
+                        }
+                    }
+                } else if (packet.sospfType == SOSPFPacket.LINKSTATE_DISCONNECT) {
+                    Link linkToRemove = null;
+                    synchronized (ports) {
+                        for (Link link : ports) {
+                            if (link.router2.simulatedIPAddress.equals(packet.srcIP)) {
+                                linkToRemove = link;
+                                break;
+                            }
+                        }
+                        if (linkToRemove == null) throw new AssertionError();
+                        ports.remove(linkToRemove);
+                    }
                 }
             }
         });
@@ -274,6 +325,12 @@ public class Router {
             }
         }
         if (removeLink != null) {
+            SOSPFPacket packet = constructDisconnectPacket(removeLink);
+            try {
+                listener.sendMessage(packet, removeLink.router2.simulatedIPAddress);
+            } catch (IOException exception) {
+                /* leap of faith */
+            }
             ports.remove(removeLink);
         } else {
             Logger.getSingleton().write("invalid port number");
@@ -345,15 +402,18 @@ public class Router {
     private void processConnect(String processIP, short processPort,
                                 String simulatedIP, short weight) {
         if (ports.stream().anyMatch(link -> link.router2.simulatedIPAddress.equals(simulatedIP))) {
-            Link link = null;
-            for (Link linkIterate : ports) {
-                if (linkIterate.router2.simulatedIPAddress.equals(simulatedIP)) {
-                    link = linkIterate;
-                    break;
+            for (Link link : ports) {
+                if (link.router2.simulatedIPAddress.equals(simulatedIP)) {
+                    assert link.router2.processIPAddress.equals(processIP);
+                    assert link.router2.processPortNumber == processPort;
+                    SOSPFPacket packet = constructLinkWeightUpdatePacket(link, weight);
+                    try {
+                        listener.sendMessage(packet, simulatedIP);
+                    } catch (IOException exception) {
+                        /* leap of faith */
+                    }
                 }
             }
-            assert link != null;
-            link.weight = weight;
         } else {
             processAttach(processIP, processPort, simulatedIP, weight);
             processStart();

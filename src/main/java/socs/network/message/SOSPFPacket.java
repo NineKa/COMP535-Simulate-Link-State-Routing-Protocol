@@ -17,6 +17,8 @@ public class SOSPFPacket implements Serializable {
 
     public static final short HELLO_TYPE = 0;
     public static final short LINKSTATE_UPDATE_TYPE = 1;
+    public static final short LINKSTATE_CONNECT_UPDATE = 2;
+    public static final short LINKSTATE_DISCONNECT = 3;
 
     //common header
     public short sospfType; //0 - HELLO, 1 - LinkState Update
@@ -30,4 +32,8 @@ public class SOSPFPacket implements Serializable {
     //used by LSAUPDATE
     public LSA lsa = null;
 
+    //used for disconnect
+
+    //used for connect, chang weight
+    public short updatedWeight;
 }
