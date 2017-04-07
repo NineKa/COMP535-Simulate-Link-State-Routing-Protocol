@@ -35,6 +35,24 @@ public interface RouterCommandVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitCmdAttachFile(RouterCommandParser.CmdAttachFileContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdConnect}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCmdConnect(RouterCommandParser.CmdConnectContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdConnectFile}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCmdConnectFile(RouterCommandParser.CmdConnectFileContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link RouterCommandParser#cmdDisconnect}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCmdDisconnect(RouterCommandParser.CmdDisconnectContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link RouterCommandParser#cmdStart}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

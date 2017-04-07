@@ -48,6 +48,36 @@ public interface RouterCommandListener extends ParseTreeListener {
 	 */
 	void exitCmdAttachFile(RouterCommandParser.CmdAttachFileContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdConnect}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdConnect(RouterCommandParser.CmdConnectContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdConnect}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdConnect(RouterCommandParser.CmdConnectContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdConnectFile}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdConnectFile(RouterCommandParser.CmdConnectFileContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdConnectFile}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdConnectFile(RouterCommandParser.CmdConnectFileContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link RouterCommandParser#cmdDisconnect}.
+	 * @param ctx the parse tree
+	 */
+	void enterCmdDisconnect(RouterCommandParser.CmdDisconnectContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link RouterCommandParser#cmdDisconnect}.
+	 * @param ctx the parse tree
+	 */
+	void exitCmdDisconnect(RouterCommandParser.CmdDisconnectContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link RouterCommandParser#cmdStart}.
 	 * @param ctx the parse tree
 	 */

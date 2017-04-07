@@ -15,7 +15,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.*;
 import java.util.stream.IntStream;
 
@@ -260,7 +262,22 @@ public class Router {
      * @param portNumber the port number which the link attaches at
      */
     private void processDisconnect(short portNumber) {
-
+        Link removeLink = null;
+        for (int c = 0; c < ports.size(); c++) {
+            if (ports.get(c).router2.status == RouterStatus.TWO_WAY) {
+                if (portNumber == 0) {
+                    removeLink = ports.get(c);
+                    break;
+                } else {
+                    portNumber = (short) (portNumber - 1);
+                }
+            }
+        }
+        if (removeLink != null) {
+            ports.remove(removeLink);
+        } else {
+            Logger.getSingleton().write("invalid port number");
+        }
     }
 
     /**
@@ -327,17 +344,40 @@ public class Router {
      */
     private void processConnect(String processIP, short processPort,
                                 String simulatedIP, short weight) {
-
+        if (ports.stream().anyMatch(link -> link.router2.simulatedIPAddress.equals(simulatedIP))) {
+            Link link = null;
+            for (Link linkIterate : ports) {
+                if (linkIterate.router2.simulatedIPAddress.equals(simulatedIP)) {
+                    link = linkIterate;
+                    break;
+                }
+            }
+            assert link != null;
+            link.weight = weight;
+        } else {
+            processAttach(processIP, processPort, simulatedIP, weight);
+            processStart();
+        }
     }
 
     /**
      * output the neighbors of the routers
      */
     private void processNeighbors() {
+        Function<Link, Integer> getID = link -> {
+            for (int i = 0; i < ports.size(); i++) {
+                if (ports.get(i) == link) return i;
+            }
+            return -1;
+        };
+
         synchronized (ports) {
             for (Link link : ports.stream().filter(link -> link.router2.status == RouterStatus.TWO_WAY).collect(Collectors.toList())) {
+                int pos = getID.apply(link);
+                assert pos >= 0;
                 Logger.getSingleton().write(String.format(
-                        "Router %s @ [%s:%s] status: %s",
+                        "[%s] Router %s @ [%s:%s] status: %s",
+                        Integer.toString(pos) + generateTabbing(3 - Integer.toString(pos).length()),
                         link.router2.simulatedIPAddress + generateTabbing(15 - link.router2.simulatedIPAddress.length()),
                         link.router2.processIPAddress + generateTabbing(15 - link.router2.processIPAddress.length()),
                         link.router2.processPortNumber + generateTabbing(4 - Short.toString(link.router2.processPortNumber).length()).length(),
@@ -381,6 +421,39 @@ public class Router {
                             Short.parseShort(cmdAttachFileContext.weight.getText())
                     );
                 }
+                return null;
+            }
+
+            @Override
+            public Void visitCmdConnect(RouterCommandParser.CmdConnectContext cmdConnectContext) {
+                processConnect(
+                        cmdConnectContext.processIP.getText(),
+                        Short.parseShort(cmdConnectContext.processPort.getText()),
+                        cmdConnectContext.simlateIP.getText(),
+                        Short.parseShort(cmdConnectContext.weight.getText())
+                );
+                return null;
+            }
+
+            @Override
+            public Void visitCmdConnectFile(RouterCommandParser.CmdConnectFileContext cmdConnectFileContext) {
+                String filepath = cmdConnectFileContext.path.getText();
+                filepath = filepath.substring(1, filepath.length() - 1).trim();
+                if (new File(filepath).exists()) {
+                    Configuration configuration = new Configuration(filepath);
+                    processConnect(
+                            configuration.getString(KEY_PROCESS_IP),
+                            configuration.getShort(KEY_PROCESS_PORT),
+                            configuration.getString(KEY_SIMULATE_IP),
+                            Short.parseShort(cmdConnectFileContext.weight.getText())
+                    );
+                }
+                return null;
+            }
+
+            @Override
+            public Void visitCmdDisconnect(RouterCommandParser.CmdDisconnectContext cmdDisconnectContext) {
+                processDisconnect(Short.parseShort(cmdDisconnectContext.port.getText()));
                 return null;
             }
 

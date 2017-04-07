@@ -3,6 +3,9 @@ grammar RouterCommand;
 command :   cmdDetect
         |   cmdAttach
         |   cmdAttachFile
+        |   cmdConnect
+        |   cmdConnectFile
+        |   cmdDisconnect
         |   cmdStart
         |   cmdNeighbors
         |   cmdQuit
@@ -12,6 +15,9 @@ command :   cmdDetect
 cmdDetect : CMD_DETECT simulateIP=IP_ADDRESS;
 cmdAttach : CMD_ATTACH processIP=IP_ADDRESS processPort=NUMBER simulateIP=IP_ADDRESS weight=NUMBER;
 cmdAttachFile : CMD_ATTACH path=QUOTED_STRING weight=NUMBER;
+cmdConnect : CMD_CONNECT processIP=IP_ADDRESS processPort=NUMBER simlateIP=IP_ADDRESS weight=NUMBER;
+cmdConnectFile : CMD_CONNECT path=QUOTED_STRING weight=NUMBER;
+cmdDisconnect : CMD_DISCONNECT port=NUMBER;
 cmdStart : CMD_START;
 cmdNeighbors : CMD_NEIGHBORS;
 cmdQuit : CMD_QUIT;

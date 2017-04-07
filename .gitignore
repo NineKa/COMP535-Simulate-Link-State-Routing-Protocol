@@ -3,6 +3,7 @@ target/
 
 # IntelliJ IDEA
 .idea/
+*.iml
 
 # Windows image file caches
 Thumbs.db

@@ -3,7 +3,6 @@ package socs.network;
 import socs.network.node.Router;
 import socs.network.util.Configuration;
 import socs.network.util.Logger;
-import sun.rmi.runtime.Log;
 
 import java.io.File;
 
